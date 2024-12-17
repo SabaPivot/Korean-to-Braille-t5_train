@@ -9,7 +9,7 @@ from transformers import (
     AutoTokenizer,
 )
 from evaluate import load
-from data import load_data, add_braille_tokens
+from utils.data import load_data, add_braille_tokens
 import wandb
 import numpy as np
 
@@ -45,7 +45,8 @@ def compute_metrics(eval_pred):
     # Compute the WER score
     wer_results = wer_metric.compute(predictions=decoded_preds, references=decoded_labels)
     cer_results = cer_metric.compute(predictions=decoded_preds, references=decoded_labels)
-    wandb.log({"wer_score": wer_results, "cer_score": cer_results})
+    bleu_results = bleu_metric.compute(predictions=decoded_preds, references=decoded_labels)
+    wandb.log({"wer_score": wer_results, "cer_score": cer_results, "bleu_score": bleu_results})
 
     return {
         "wer_score": wer_results,
@@ -140,6 +141,7 @@ if __name__ == "__main__":
     # initialize metric wer
     wer_metric = load("wer")
     cer_metric = load("cer")
+    bleu_metric = load("google_bleu")
 
     # Set up Trainer
     trainer = Seq2SeqTrainer(
