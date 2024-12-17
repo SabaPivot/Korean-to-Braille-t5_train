@@ -39,7 +39,7 @@ def load_and_merge_braille_lists(file_path):
 
 
 def add_braille_tokens(tokenizer, model):
-    braille_list = load_and_merge_braille_lists("special_braille.txt")
+    braille_list = load_and_merge_braille_lists(r"utils/special_braille.txt")
     special_tokens_dict = {"additional_special_tokens": read_braille_tokens() + braille_list}
     tokenizer.add_special_tokens(special_tokens_dict)
     model.resize_token_embeddings(len(tokenizer), mean_resizing=False)
