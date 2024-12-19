@@ -66,7 +66,7 @@ def eval(preds, targets):
 
     print(f"""
 Correct: {correct}
-Correct Rate: {correct/length},
+Correct Rate: {correct/length}
 Avg WER: {wer/length}
 Avg CER: {cer/length}
 Avg BLEU: {bleu/length}
