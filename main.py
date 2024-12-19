@@ -7,6 +7,7 @@ from transformers import (
     Seq2SeqTrainingArguments,
     Seq2SeqTrainer,
     AutoTokenizer,
+    AutoConfig
 )
 from evaluate import load
 from utils.data import load_data, add_braille_tokens
@@ -50,7 +51,8 @@ def compute_metrics(eval_pred):
 
     return {
         "wer_score": wer_results,
-        "cer_score": cer_results
+        "cer_score": cer_results,
+        "bleu_score": bleu_results
     }
 
 @dataclass
@@ -61,6 +63,9 @@ class ExtraArguments:
     )
     tokenizer_name_or_path: str = field(
         default=None
+    )
+    dropout_rate: float = field(
+        default=0.1
     )
     # Data directory, train/valid/test ratio.
     data_dir: str = field(
@@ -89,8 +94,7 @@ class ExtraArguments:
 
 if __name__ == "__main__":
     parser = HfArgumentParser((ExtraArguments,
-                               Seq2SeqTrainingArguments,
-                               ))
+                               Seq2SeqTrainingArguments))
     extra_args, training_args = parser.parse_args_into_dataclasses()
 
     wandb.init(
@@ -101,13 +105,16 @@ if __name__ == "__main__":
     )
 
     # Load Model
-    model = AutoModelForSeq2SeqLM.from_pretrained(extra_args.model_name_or_path)
+    config = AutoConfig.from_pretrained(extra_args.model_name_or_path)
+    config.dropout_rate = extra_args.dropout_rate
+    config.attention_dropout = extra_args.dropout_rate
+    config.activation_dropout = extra_args.dropout_rate    
+    model = AutoModelForSeq2SeqLM.from_pretrained(extra_args.model_name_or_path, config=config)
     tokenizer = AutoTokenizer.from_pretrained(extra_args.tokenizer_name_or_path or extra_args.model_name_or_path)
     tokenizer = add_braille_tokens(tokenizer, model)
 
     # Load Data
     raw_datasets = load_data(extra_args.data_dir)
-    print(raw_datasets)
 
     train_eval_split = raw_datasets.train_test_split(
         train_size=extra_args.train_ratio,
